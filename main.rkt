@@ -151,3 +151,337 @@
       ((> a b) #f)
       ((< a b) #f)
       (else #t))))
+
+(define ^
+  (lambda (a b)
+    (cond
+      ((zero? b) 1)
+      (else (x a (^ a (sub1 b)))))))
+
+(define /
+  (lambda (a b)
+    (cond
+      ((< a b) 0)
+      (else (add1 (/ (- a b) b))))))
+
+(define length
+  (lambda (lat)
+    (cond
+      ((null? lat) 0)
+      (else (add1 (length (cdr lat)))))))
+
+(define pick
+  (lambda (n lat)
+    (cond
+      ((zero? (sub1 n)) (car lat))
+      (else (pick (sub1 n) (cdr lat))))))
+
+(define rempick
+  (lambda (n lat)
+    (cond
+      ((zero? (sub1 n)) (cdr lat))
+      (else (cons (car lat)
+                  (rempick (sub1 n) (cdr lat)))))))
+
+(define no-nums
+  (lambda (lat)
+    (cond
+      ((null? lat) (quote ()))
+      ((number? (car lat))
+       (no-nums (cdr lat)))
+      (else (cons (car lat)
+                  (no-nums (cdr lat)))))))
+
+; (no-nums '(5 pears 6 prunes 9 dates))
+
+(define all-nums
+  (lambda (lat)
+    (cond
+      ((null? lat) (quote ()))
+      ((number? (car lat))
+       (cons (car lat)
+             (all-nums (cdr lat))))
+      (else (all-nums (cdr lat))))))
+
+; (all-nums '(5 pears 6 prunes 9 dates))
+
+(define eqan?
+  (lambda (a1 a2)
+    (cond
+      ((and (number? a1)
+            (number? a2))
+       (= a1 a2))
+      ((or (number? a1)
+           (number? a2)) #f)
+      (else (eq? a1 a2)))))
+
+(define occur
+  (lambda (a lat)
+    (cond
+      ((null? lat) 0)
+      ((eqan? a (car lat))
+       (add1 (occur a (cdr lat))))
+      (else (occur a (cdr lat))))))
+
+; (occur 'one '(one two one two three four one six))
+
+(define one? (lambda (n) (= n 1)))
+
+(define rempick-one
+  (lambda (n lat)
+    (cond
+      ((one? n) (cdr lat))
+      (else (cons (car lat)
+                  (rempick-one (sub1 n) (cdr lat)))))))
+
+; (rempick-one 3 '(lemon meringue pie))
+
+(define rember*
+  (lambda (a l)
+    (cond
+      ((empty? l) (quote ()))
+      ((atom? (car l))
+       (cond
+         ((eqan? a (car l))
+          (rember* a (cdr l)))
+         (else (cons (car l)
+                     (rember* a (cdr l))))))
+      (else
+       (cons (rember* a (car l))
+             (rember* a (cdr l)))))))
+
+;(rember* 'cup '((coffee)
+;                cup
+;                ((tea)
+;                 cup)
+;                (and
+;                 (hick))
+;                cup))
+
+
+;(rember* 'sauce '(((tomato sauce))
+;                  ((bean) sauce)
+;                  (and ((flying)) sauce)))
+
+(define insertR*
+  (lambda (new old l)
+    (cond
+      ((empty? l) (quote ()))
+      ((atom? (car l))
+       (cond
+         ((eqan? old (car l))
+          (cons old
+                (cons new
+                      (insertR* new old (cdr l)))))
+         (else (cons (car l)
+                     (insertR* new old (cdr l))))))
+      (else
+       (cons (insertR* new old (car l))
+             (insertR* new old (cdr l)))))))
+
+;(insertR* 'roast 'chuck '((how much (wood))
+;                          could
+;                          ((a (wood) chuck))
+;                          (((chuck)))
+;                          (if (a) ((wood chuck)))
+;                          could chuck wood))
+
+(define occur*
+  (lambda (a l)
+    (cond
+      ((empty? l) 0)
+      ((atom? (car l))
+       (cond
+         ((eqan? a (car l))
+          (add1 (occur* a (cdr l))))
+         (else (occur* a (cdr l)))))
+      (else
+       (+ (occur* a (car l))
+          (occur* a (cdr l)))))))
+
+;(occur* 'banana '((banana)
+;                  (split ((((banana ice)))
+;                          (cream (banana))
+;                          sherbet))
+;                  (banana)
+;                  (bread)
+;                  (banana brandy)))
+
+(define subst*
+  (lambda (new old l)
+    (cond
+      ((null? l) (quote ()))
+      ((atom? (car l))
+       (cond
+         ((eq? old (car l))
+          (cons new
+                (subst* new old (cdr l))))
+         (else (cons (car l)
+                     (subst* new old (cdr l))))))
+      (else (cons (subst* new old (car l))
+                  (subst* new old (cdr l)))))))
+
+;(subst* 'orange 'banana '((banana)
+;                  (split ((((banana ice)))
+;                          (cream (banana))
+;                          sherbet))
+;                  (banana)
+;                  (bread)
+;                  (banana brandy)))
+
+(define member*
+  (lambda (a l)
+    (cond
+      ((null? l) #f)
+      ((atom? (car l))
+         (or (eq? (car l) a)
+             (member* a (cdr l))))
+      (else (or (member* a (car l))
+                (member* a (cdr l)))))))
+
+;(member* 'chips '((potato)
+;                  (chips ((with) fish) (chips))))
+
+; leftmost ONLY needs to recur on the car
+(define leftmost
+  (lambda (l)
+    (cond
+      ((atom? (car l)) (car l))
+      (else (leftmost (car l))))))
+
+;(leftmost '((potato)
+;            (chips ((with) fish) (chips))))
+
+(define eqlist?
+  (lambda (l1 l2)
+    (cond
+      ((and (null? l1) (null? l2)) #t)
+      ((or (null? l1) (null? l2)) #f)
+      (else
+       (and (equal? (car l1) (car l2))
+            (equal? (cdr l1) (cdr l2)))))))
+
+(define equal?
+  (lambda (l1 l2)
+    (cond
+      ((and (atom? l1)
+            (atom? l2))
+            (eqan? l1 l2))
+      ((or (atom? l1) (atom? l2)) #f)
+      (else (eqlist? l1 l2)))))
+
+; ==========
+; 6 SHADOWS
+; ==========
+
+(define numbered?
+  (lambda (aexp)
+    (cond
+      ((atom? aexp) (number? aexp))
+      (else
+       (and (numbered? (car aexp))
+            (numbered? (car (cdr (cdr aexp)))))))))
+
+;(numbered? '(1 + (4 x 5)))
+;(numbered? '(1 + (4 toast 5)))
+;(numbered? '(sausage + 12))
+
+
+(define value
+  (lambda (nexp)
+    (cond
+      ((atom? nexp) nexp)
+      ((eq? (car (cdr nexp)) (quote +))
+       (+ (car nexp)
+          (value (car (cdr (cdr nexp))))))
+      ((eq? (car (cdr nexp)) (quote x))
+       (+ (car nexp)
+          (value (car (cdr (cdr nexp))))))
+      ((eq? (car (cdr nexp)) (quote ^))
+       (^ (car nexp)
+          (value (car (cdr (cdr nexp))))))
+      (else 'naw))))
+
+;(value 13) ; 13
+;(value '(1 + 3)) ; 4
+;(value '(1 + (3 ^ 4))) ; 82
+;(value 'cookie) ; no answer
+
+(define 1st-sub-exp
+  (lambda (aexp)
+    (car (cdr aexp))))
+
+; (1st-sub-exp '(+ 1 3))
+
+(define 2nd-sub-exp
+  (lambda (aexp)
+    (car (cdr (cdr aexp)))))
+
+; (2nd-sub-exp '(+ 1 3))
+
+(define operator
+  (lambda (aexp)
+    (car aexp)))
+
+; (operator '(+ 1 3))
+
+(define value-higher-order
+  (lambda (nexp)
+    (cond
+      ((atom? nexp) nexp)
+      ((eq? (operator nexp) (quote +))
+       (+ (1st-sub-exp nexp)
+          (2nd-sub-exp nexp)))
+      ((eq? (operator nexp) (quote x))
+       (x (1st-sub-exp nexp)
+          (2nd-sub-exp nexp)))
+      ((eq? (operator nexp) (quote ^))
+       (^ (1st-sub-exp nexp)
+          (2nd-sub-exp nexp)))
+      (else 'naw))))
+
+(define sero?
+  (lambda (n)
+    (null? n)))
+
+(define edd1
+  (lambda (n)
+    (cons (quote ()) n)))
+
+(define zub1
+  (lambda (n)
+    (cdr n)))
+
+; ==========
+; 7 FRIENDS AND RELATIONS
+; ==========
+
+(define set?
+  (lambda (lat)
+    (cond
+      ((null? lat) #t)
+      ((member? (car lat) (cdr lat)) #f)
+      (else (set? (cdr lat))))))
+
+; (set? '(apple peaches apple plum))
+; (set? '(apple peaches pear plum))
+
+(define makeset
+  (lambda (lat)
+    (cond
+      ((null? lat) (quote ()))
+      ((member? (car lat) (cdr lat))
+       (makeset (cdr lat)))
+      (else (cons (car lat)
+                  (makeset (cdr lat)))))))
+
+; (makeset '(apple peach pear peach plum apple lemon peach))
+
+(define makeset-multirember
+  (lambda (lat)
+    (cond
+      ((null? lat) (quote ()))
+      (else (cons (car lat)
+                  (makeset-multirember (multirember (car lat) (cdr lat))))))))
+
+; (makeset-multirember '(apple peach pear peach plum apple lemon peach))
