@@ -1,6 +1,6 @@
 ### The Little Schemer - Examples
 
-** Note: Trivial examples not included here **
+**Note: Trivial examples not included here**
 
 ### TODO / COMING SOON
 
