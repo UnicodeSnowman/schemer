@@ -485,3 +485,110 @@
                   (makeset-multirember (multirember (car lat) (cdr lat))))))))
 
 ; (makeset-multirember '(apple peach pear peach plum apple lemon peach))
+
+(define subset?
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) #t)
+      (else (and (member? (car set1) set2)
+                 (subset? (cdr set1) set2))))))
+
+;(subset? '(5 chicken wings)
+;         '(5 hamburgers
+;           2 pieces fried chicken and
+;           light duckling wings))
+
+;(subset? '(4 pounds of horseradish)
+;         '(four pounds chicken and 5 ounces horseradish))
+
+(define eqset?
+  (lambda (set1 set2)
+    (and (subset? set1 set2)
+         (subset? set2 set1))))
+
+; (eqset? '(6 large chickens with wings) '(6 chickens with large wings))
+
+(define intersect?
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) #f)
+      (else (or (member? (car set1) set2)
+                (intersect? (cdr set1) set2))))))
+
+; (intersect? '(stewed tomatoes and macaroni) '(macaroni and cheese))
+
+(define intersect
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) (quote ()))
+      ((member? (car set1) set2) (cons (car set1)
+                                       (intersect (cdr set1) set2)))
+      (else (intersect (cdr set1) set2)))))
+
+;(intersect '(stewed tomatoes and macaroni) '(macaroni and cheese))
+
+; note: we recur through, first adding all atoms from set1 that are *not*
+; in set2, then when set1 is empty, we append all of set2, thus including
+; all atoms from set2
+(define union
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) set2)
+      ((member? (car set1) set2) (union (cdr set1) set2))
+      (else (cons (car set1)
+                  (union (cdr set1) set2))))))
+
+;(union '(stewed tomatoes and macaroni casserole) '(macaroni and cheese))
+
+(define intersectall
+  (lambda (l-set)
+    (cond
+      ((null? (cdr l-set)) (car l-set))
+      (else (intersect (car l-set)
+                       (intersectall (cdr l-set)))))))
+
+;(intersectall '((a b c) (c a b d e) (e f g h a b)))
+;(intersectall '((6 pears and)
+;                (3 peaches and 6 peppers)
+;                (8 pears and 6 plums)
+;                (and 6 prunes with some apples)))
+
+(define a-pair?
+  (lambda (x)
+    (cond
+      ((atom? x) #f)
+      ((null? x) #f)
+      ((null? (cdr x)) #f)
+      ((null? (cdr (cdr x))) #t)
+      (else #f))))
+
+;(a-pair? '(3 7))
+;(a-pair? '(3 7 4))
+;(a-pair? '((1) (2)))
+
+(define first
+  (lambda (p)
+    (car p)))
+
+(define second
+  (lambda (p)
+    (car (cdr p))))
+
+(define build
+  (lambda (s1 s2)
+    (cons s1
+          (cons s2 (quote ())))))
+
+(define revpair
+  (lambda (pair)
+    (build (second pair)
+           (first pair))))
+
+(define revrel
+  (lambda (rel)
+    (cond
+      ((null? rel) (quote ()))
+      (else (cons (revpair (car rel))
+                  (revrel (cdr rel)))))))
+
+(revrel '((8 a) (pumpkin pie) (got sick)))
