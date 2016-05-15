@@ -591,4 +591,131 @@
       (else (cons (revpair (car rel))
                   (revrel (cdr rel)))))))
 
-(revrel '((8 a) (pumpkin pie) (got sick)))
+;(revrel '((8 a) (pumpkin pie) (got sick)))
+
+; ==========
+; CH 8 LAMBDA THE ULTIMATE
+; ==========
+
+(define rember-f
+  (lambda (test? a l)
+    (cond
+      ((null? l) (quote ()))
+      ((test? (car l) a) (cdr l))
+      (else (cons (car l)
+                  (rember-f test?
+                            a
+                            (cdr l)))))))
+
+; currying...
+;(define rember-f
+;  (lambda (test?)
+;    (lambda (a l)
+;      (cond ...))))
+
+;(rember-f = '5 '(6 2 5 3))
+;(rember-f eq? '5 '(6 2 5 3))
+
+(define insert-g
+  (lambda (seq)
+    (lambda (new old l)
+      (cond
+        ((null? l) (quote ()))
+        ((eq? (car l) old)
+         (seq new old (cdr l)))
+        (else (cons (car l)
+                    ((insert-g seq) new old (cdr l))))))))
+
+(define insertL
+  (insert-g
+   (lambda (new old l)
+     (cons new
+           (cons old l)))))
+
+; can do same as insertL for insertR (previously written above)
+
+; can also do same for subst fn, also previously written above... but with
+(define seqS
+  (lambda (new _ l)
+    (cons new l)))
+; passed to insert-g as the seq fn
+
+; same with rember and...
+(define seqrem
+  (lambda (new old l) l))
+
+; neat-o!
+
+; use col (a "collector" fn, or "continuation") to separate atoms in into one list or another based
+; on whether or not they pass the condition (eq?, in this case). 
+(define multirember&co
+  (lambda (a lat col)
+    (cond
+      ((null? lat)
+       (col (quote ()) (quote())))
+      ((eq? (car lat) a)
+       (multirember&co a
+                       (cdr lat)
+                       (lambda (newlat seen)
+                         (col newlat
+                              (cons (car lat) seen)))))
+      (else
+       (multirember&co a
+                       (cdr lat)
+                       (lambda (newlat seen)
+                         (col (cons (car lat) newlat)
+                              seen)))))))
+
+(define a-friend
+  (lambda (x y)
+    (null? y)))
+
+(define last-friend
+  (lambda (x y)
+    (length x)))
+
+;(multirember&co 'tuna '(tuna and something) a-friend)
+;(multirember&co 'tuna '(tuna and banana something) last-friend)
+
+; NOTE: build functions (i.e. collector) to collect more than one value at a time!
+
+(define evens-only*&co
+  (lambda (l col)
+    (cond
+      ((null? l)
+       (col (quote ()) 1 0))
+      ((atom? (car l))
+       (cond
+         ((even? (car l))
+          (evens-only*&co (cdr l)
+                          (lambda (newl p s)
+                            (col (cons (car l) newl)
+                                 (x (car l) p)
+                                 s))))
+         (else
+          (evens-only*&co (cdr l)
+                          (lambda (newl p s)
+                            (col newl p
+                                 (+ (car l) s)))))))
+      (else
+       (evens-only*&co (car l)
+                       (lambda (al ap as)
+                         (evens-only*&co (cdr l)
+                                         (lambda (dl dp ds)
+                                           (col (cons al dl)
+                                                (x ap dp)
+                                                (+ as ds))))))))))
+
+(define the-last-friend
+  (lambda (newl product sum)
+    (cons sum
+          (cons product
+                newl))))
+
+(evens-only*&co '((9 1 2 8) 3 10 ((9 9) 7 6) 2) the-last-friend)
+
+; ==========
+; CH 9 ...AND AGAIN, AND AGAIN, AND AGAIN,...
+; ==========
+
+
