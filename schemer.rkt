@@ -712,10 +712,143 @@
           (cons product
                 newl))))
 
-(evens-only*&co '((9 1 2 8) 3 10 ((9 9) 7 6) 2) the-last-friend)
+;(evens-only*&co '((9 1 2 8) 3 10 ((9 9) 7 6) 2) the-last-friend)
 
 ; ==========
 ; CH 9 ...AND AGAIN, AND AGAIN, AND AGAIN,...
 ; ==========
 
+(define looking
+  (lambda (a lat)
+    (keep-looking a (pick 1 lat) lat)))
 
+(define keep-looking
+  (lambda (a sorn lat)
+    (cond
+      ((number? sorn)
+       (keep-looking a (pick sorn lat) lat))
+      (else (eq? a sorn)))))
+
+;(looking 'caviar '(6 2 4 caviar 5 7 3))
+;(looking 'caviar '(6 2 grits caviar 5 7 3))
+
+; looking is a "partial" (in scheme terminology) function, in that it doesn't always get closer to its goal
+; when recursing. Other functions are "total"
+
+; i.e. (define eternity (lambda (x) (eternity x)))
+
+(define shift
+  (lambda (pair)
+    (build (first (first pair))
+           (build (second (first pair))
+                  (second pair)))))
+
+;(shift '((a b) c)) ; (a (b c))
+;(shift '((a b) (c d))) ; (a (b (c d)))
+
+(define length*
+  (lambda (pora)
+    (cond
+      ((atom? pora) 1)
+      (else
+       (+ (length* (first pora))
+          (length* (second pora)))))))
+
+;(length* '((a b) (c d)))
+
+(define weight*
+  (lambda (pora)
+    (cond
+      ((atom? pora) 1)
+      (else
+       (+ (x (weight* (first pora)) 2)
+          (weight* (second pora)))))))
+
+;(weight* '((a b) c))
+
+; ...
+; coming back to rest of chapter to fully comprehend this and Y-Combinator
+; ...
+
+; ==========
+; CH 10 WHAT IS THE VALUE OF ALL OF THIS?
+; ==========
+
+(define new-entry build)
+
+;(new-entry
+; '(appetizer entree beverage)
+; '(pate boeuf vin))
+
+;(new-entry
+; '(beer beer beer)
+; '(beer beer beer))
+
+(define lookup-in-entry-mine
+  (lambda (name entry)
+    (cond
+      ((null? entry) (quote ()))
+      ((eq?
+        (first (first entry))
+        name) (first (second entry)))
+      (else
+       (lookup-in-entry
+        name
+        (build (cdr (first entry))
+               (cdr (second entry))))))))
+
+(define lookup-in-entry-help
+  (lambda (name names values entry-f)
+    (cond
+      ((null? names) (entry-f name))
+      ((eq? (car names) name)
+       (car values))
+      (else (lookup-in-entry-help
+             name
+             (cdr names)
+             (cdr values)
+             entry-f)))))
+
+(define lookup-in-entry
+  (lambda (name entry entry-f)
+         (lookup-in-entry-help
+          name
+          (first entry)
+          (second entry)
+          entry-f)))
+
+(define not-found
+  (lambda (name)
+    "not found"))
+
+;(lookup-in-entry 'entdddree
+;                 (build '(appetizer entree beverage)
+;                        '(food tastes good))
+;                 not-found)
+
+(define extend-table cons)
+
+; table-fn is used if lookup-in-entry does not find the current
+; entry... it recurs over lookup-in-table again, with cdr of table
+(define lookup-in-table
+  (lambda (name table table-f)
+    (cond
+      ((null? table) (table-f name))
+      (else
+       (lookup-in-entry
+        name
+        (car table)
+        (lambda (name)
+          (lookup-in-table
+           name
+           (cdr table)
+           table-f)))))))
+
+(lookup-in-table
+ 'entree
+ '(((entree dessert)
+    (spaghetti spumoni))
+   ((appetizer entree beverage)
+    (food tastes good)))
+ (lambda (name)
+   "Not Found"))
